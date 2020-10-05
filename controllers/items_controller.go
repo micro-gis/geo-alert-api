@@ -1,39 +1,59 @@
 package controllers
 
 import (
-	"fmt"
-	"github.com/micro-gis/oauth-go/oauth"
+	"encoding/json"
 	"github.com/micro-gis/item-api/domain/items"
+	"github.com/micro-gis/item-api/services"
+	"github.com/micro-gis/item-api/utils/http_utils"
+	"github.com/micro-gis/oauth-go/oauth"
+	"github.com/micro-gis/utils/rest_errors"
+	"io/ioutil"
 	"net/http"
 )
 
-func Create(w http.ResponseWriter, r *http.Request) {
+var (
+	ItemController itemsControllerInterface = &itemsController{}
+)
+
+type itemsControllerInterface interface {
+	Create(w http.ResponseWriter, r *http.Request)
+	Get(w http.ResponseWriter, r *http.Request)
+}
+
+type itemsController struct {
+}
+
+func (c *itemsController) Create(w http.ResponseWriter, r *http.Request) {
 	if err := oauth.AuthenticateRequest(r); err != nil {
-		//TODO: Return error to the caller
+		http_utils.ResponseError(w, *err)
 		return
 	}
 
-	item := items.Item{
-		Id:                "",
-		Seller:            oauth.GetCallerId(r),
-		Title:             "",
-		Description:       items.Description{},
-		Pictures:          nil,
-		Video:             "",
-		Price:             0,
-		AvailableQuantity: 0,
-		SoldQuantity:      0,
-		Status:            "",
-	}
-	result, err := services.ItemsService.Create(item)
+	var itemRequest items.Item
+	requestBody, err := ioutil.ReadAll(r.Body)
+
 	if err != nil {
-		//TODO: Return error json to the user
+		respErr := rest_errors.NewBadRequestError("invalid request body")
+		http_utils.ResponseError(w, *respErr)
+		return
 	}
-	fmt.Println(result)
-	//TODO : Return created item with HTTP status 201 -Created
-	
+	defer r.Body.Close()
+
+	if err := json.Unmarshal(requestBody, &itemRequest); err != nil {
+		respErr := rest_errors.NewBadRequestError("invalid request body")
+		http_utils.ResponseError(w, *respErr)
+		return
+	}
+
+	itemRequest.Seller = oauth.GetCallerId(r)
+	result, createErr := services.ItemService.Create(itemRequest)
+	if createErr != nil {
+		http_utils.ResponseError(w, *createErr)
+	}
+	http_utils.ResponseJson(w, http.StatusCreated, result)
+
 }
 
-func Get(w http.ResponseWriter, r *http.Request) {
+func (c *itemsController) Get(w http.ResponseWriter, r *http.Request) {
 
 }
