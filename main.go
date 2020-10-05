@@ -1,7 +1,7 @@
 package main
 
-import "fmt"
+import "github.com/micro-gis/item-api/app"
 
 func main() {
-	fmt.Println("item api")
+	app.StartApplication()
 }
