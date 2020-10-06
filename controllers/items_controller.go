@@ -29,6 +29,13 @@ func (c *itemsController) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	sellerId := oauth.GetCallerId(r)
+
+	if sellerId == 0 {
+		restErr := rest_errors.NewUnauthorizedError()
+		http_utils.ResponseError(w, *restErr)
+		return
+	}
 	var itemRequest items.Item
 	requestBody, err := ioutil.ReadAll(r.Body)
 
@@ -45,12 +52,14 @@ func (c *itemsController) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	itemRequest.Seller = oauth.GetCallerId(r)
+	itemRequest.Seller = sellerId
 	result, createErr := services.ItemService.Create(itemRequest)
 	if createErr != nil {
 		http_utils.ResponseError(w, *createErr)
+		return
 	}
 	http_utils.ResponseJson(w, http.StatusCreated, result)
+	return
 
 }
 

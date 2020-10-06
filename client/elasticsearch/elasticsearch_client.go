@@ -2,6 +2,8 @@ package elasticsearch
 
 import (
 	"context"
+	"fmt"
+	"github.com/micro-gis/utils/logger"
 	"github.com/olivere/elastic"
 	"time"
 )
@@ -12,7 +14,7 @@ var (
 
 type esClientInterface interface {
 	setClient(c *elastic.Client)
-	Index(interface{}) (*elastic.IndexResponse, error)
+	Index(string, interface{}) (*elastic.IndexResponse, error)
 }
 
 type esClient struct {
@@ -24,8 +26,8 @@ func Init() {
 		elastic.SetURL("http://127.0.01:9200"),
 		elastic.SetSniff(false),
 		elastic.SetHealthcheckInterval(10*time.Second),
-		//elastic.SetErrorLog(log.New(os.Stderr, "ELASTIC ", log.LstdFlags)),
-		//elastic.SetInfoLog(log.New(os.Stdout, "", log.LstdFlags)),
+		elastic.SetErrorLog(logger.GetLogger()),
+		elastic.SetInfoLog(logger.GetLogger()),
 		//elastic.SetHeaders(http.Header{
 		//	"X-Caller-Id": []string{"..."},
 		//}),
@@ -38,7 +40,17 @@ func Init() {
 func (ec *esClient) setClient(c *elastic.Client) {
 	ec.client = c
 }
-func (ec *esClient) Index(i interface{}) (*elastic.IndexResponse, error) {
+func (ec *esClient) Index(index string, doc interface{}) (*elastic.IndexResponse, error) {
 	ctx := context.Background()
-	return ec.client.Index().Do(ctx)
+	result, err := ec.client.Index().
+		Type("Item").
+		Index(index).
+		BodyJson(doc).
+		Do(ctx)
+
+	if err != nil {
+		logger.Error(fmt.Sprintf("error when trying to index document in index : %s", index), err)
+		return nil, err
+	}
+	return result, nil
 }
