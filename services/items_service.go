@@ -3,7 +3,6 @@ package services
 import (
 	"github.com/micro-gis/item-api/domain/items"
 	"github.com/micro-gis/utils/rest_errors"
-	"net/http"
 )
 
 var (
@@ -24,6 +23,10 @@ func (is itemService) Create(item items.Item) (*items.Item, rest_errors.RestErr)
 	return &item, nil
 }
 
-func (is itemService) Get(s string) (*items.Item, rest_errors.RestErr) {
-	return nil, rest_errors.NewRestError("not implemeted yet", http.StatusNotImplemented, "not implemented", nil)
+func (is itemService) Get(id string) (*items.Item, rest_errors.RestErr) {
+	item := items.Item{Id: id}
+	if err := item.Get(); err != nil {
+		return nil, err
+	}
+	return &item, nil
 }

@@ -14,7 +14,8 @@ var (
 
 type esClientInterface interface {
 	setClient(c *elastic.Client)
-	Index(string, interface{}) (*elastic.IndexResponse, error)
+	Index(string, string, interface{}) (*elastic.IndexResponse, error)
+	Get(string, string, string) (*elastic.GetResult, error)
 }
 
 type esClient struct {
@@ -32,6 +33,7 @@ func Init() {
 		//	"X-Caller-Id": []string{"..."},
 		//}),
 	)
+
 	if err != nil {
 		panic(err)
 	}
@@ -40,10 +42,10 @@ func Init() {
 func (ec *esClient) setClient(c *elastic.Client) {
 	ec.client = c
 }
-func (ec *esClient) Index(index string, doc interface{}) (*elastic.IndexResponse, error) {
+func (ec *esClient) Index(index string, doctype string, doc interface{}) (*elastic.IndexResponse, error) {
 	ctx := context.Background()
 	result, err := ec.client.Index().
-		Type("Item").
+		Type(doctype).
 		Index(index).
 		BodyJson(doc).
 		Do(ctx)
@@ -53,4 +55,19 @@ func (ec *esClient) Index(index string, doc interface{}) (*elastic.IndexResponse
 		return nil, err
 	}
 	return result, nil
+}
+
+func (ec *esClient) Get(index string, doctype string, id string) (*elastic.GetResult, error) {
+	ctx := context.Background()
+	result, err := ec.client.Get().Index(index).Type(doctype).Id(id).Do(ctx)
+	if err != nil {
+		logger.Error(fmt.Sprintf("error when trying to get id %s", id), err)
+		return nil, err
+	}
+	return result, nil
+}
+
+func (ec *esClient) Search(index string) {
+	//ctx := context.Background()
+	//result, err := ec.client.Search(index).Query()
 }

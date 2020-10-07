@@ -2,6 +2,8 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
+	"github.com/gorilla/mux"
 	"github.com/micro-gis/item-api/domain/items"
 	"github.com/micro-gis/item-api/services"
 	"github.com/micro-gis/item-api/utils/http_utils"
@@ -9,6 +11,7 @@ import (
 	"github.com/micro-gis/utils/rest_errors"
 	"io/ioutil"
 	"net/http"
+	"strings"
 )
 
 var (
@@ -25,6 +28,7 @@ type itemsController struct {
 
 func (c *itemsController) Create(w http.ResponseWriter, r *http.Request) {
 	if err := oauth.AuthenticateRequest(r); err != nil {
+		fmt.Println(err)
 		http_utils.ResponseError(w, err)
 		return
 	}
@@ -32,7 +36,7 @@ func (c *itemsController) Create(w http.ResponseWriter, r *http.Request) {
 	sellerId := oauth.GetCallerId(r)
 
 	if sellerId == 0 {
-		restErr := rest_errors.NewUnauthorizedError()
+		restErr := rest_errors.NewUnauthorizedError("user not authenticated")
 		http_utils.ResponseError(w, restErr)
 		return
 	}
@@ -64,5 +68,13 @@ func (c *itemsController) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *itemsController) Get(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	itemId := strings.TrimSpace(vars["id"])
+	item, err := services.ItemService.Get(itemId)
 
+	if err != nil {
+		http_utils.ResponseError(w, err)
+		return
+	}
+	http_utils.ResponseJson(w, http.StatusOK, item)
 }
