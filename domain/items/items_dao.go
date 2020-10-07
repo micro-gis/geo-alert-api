@@ -8,10 +8,11 @@ import (
 
 const (
 	indexItem = "item"
+	typeItem  = "_doc"
 )
 
 func (i *Item) Save() rest_errors.RestErr {
-	result, err := elasticsearch.Client.Index(indexItem, i)
+	result, err := elasticsearch.Client.Index(indexItem, typeItem, i)
 	if err != nil {
 		return rest_errors.NewInternalServerError("error when trying to save item", errors.New("database error"))
 	}

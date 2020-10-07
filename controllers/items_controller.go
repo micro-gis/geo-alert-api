@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/micro-gis/item-api/domain/items"
 	"github.com/micro-gis/item-api/services"
 	"github.com/micro-gis/item-api/utils/http_utils"
@@ -25,6 +26,7 @@ type itemsController struct {
 
 func (c *itemsController) Create(w http.ResponseWriter, r *http.Request) {
 	if err := oauth.AuthenticateRequest(r); err != nil {
+		fmt.Println(err)
 		http_utils.ResponseError(w, err)
 		return
 	}
@@ -32,7 +34,7 @@ func (c *itemsController) Create(w http.ResponseWriter, r *http.Request) {
 	sellerId := oauth.GetCallerId(r)
 
 	if sellerId == 0 {
-		restErr := rest_errors.NewUnauthorizedError()
+		restErr := rest_errors.NewUnauthorizedError("user not authenticated")
 		http_utils.ResponseError(w, restErr)
 		return
 	}

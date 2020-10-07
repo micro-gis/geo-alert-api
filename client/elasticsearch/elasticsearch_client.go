@@ -14,7 +14,7 @@ var (
 
 type esClientInterface interface {
 	setClient(c *elastic.Client)
-	Index(string, interface{}) (*elastic.IndexResponse, error)
+	Index(string, string, interface{}) (*elastic.IndexResponse, error)
 }
 
 type esClient struct {
@@ -32,6 +32,7 @@ func Init() {
 		//	"X-Caller-Id": []string{"..."},
 		//}),
 	)
+
 	if err != nil {
 		panic(err)
 	}
@@ -40,10 +41,10 @@ func Init() {
 func (ec *esClient) setClient(c *elastic.Client) {
 	ec.client = c
 }
-func (ec *esClient) Index(index string, doc interface{}) (*elastic.IndexResponse, error) {
+func (ec *esClient) Index(index string, doctype string, doc interface{}) (*elastic.IndexResponse, error) {
 	ctx := context.Background()
 	result, err := ec.client.Index().
-		Type("Item").
+		Type(doctype).
 		Index(index).
 		BodyJson(doc).
 		Do(ctx)
