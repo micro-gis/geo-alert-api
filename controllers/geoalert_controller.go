@@ -103,6 +103,10 @@ func (c *geoalertsController) GetUserGeoAlerts(w http.ResponseWriter, r *http.Re
 }
 
 func (c *geoalertsController) Search(w http.ResponseWriter, r *http.Request) {
+	authErr := http_utils.AuthenticateRequest(r, false, 0)
+	if authErr != nil {
+		http_utils.ResponseError(w, authErr)
+	}
 	bytes, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		apiErr := rest_errors.NewBadRequestError("Invalid json body")
@@ -118,7 +122,7 @@ func (c *geoalertsController) Search(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	geoalerts, restErr := services.GeoAlertService.Search(query)
+	geoalerts, restErr := services.GeoAlertService.Search(query, oauth.IsPublic(r))
 	if restErr != nil {
 		http_utils.ResponseError(w, restErr)
 		return

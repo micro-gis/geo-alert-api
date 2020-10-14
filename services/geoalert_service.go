@@ -13,7 +13,7 @@ var (
 type geoalertServiceInterface interface {
 	Create(geoalert.GeoAlert) (*geoalert.GeoAlert, rest_errors.RestErr)
 	Get(string) (*geoalert.GeoAlert, rest_errors.RestErr)
-	Search(query queries.EsQuery) ([]geoalert.GeoAlert, rest_errors.RestErr)
+	Search(queries.EsQuery, bool) ([]geoalert.GeoAlert, rest_errors.RestErr)
 	GetUserGeoAlerts(int64, bool) ([]geoalert.GeoAlert, rest_errors.RestErr)
 }
 
@@ -34,8 +34,15 @@ func (is *geoalertService) Get(id string) (*geoalert.GeoAlert, rest_errors.RestE
 	return &geo, nil
 }
 
-func (is *geoalertService) Search(query queries.EsQuery) ([]geoalert.GeoAlert, rest_errors.RestErr) {
+func (is *geoalertService) Search(query queries.EsQuery, isPublic bool) ([]geoalert.GeoAlert, rest_errors.RestErr) {
 	dao := geoalert.GeoAlert{}
+	if isPublic {
+		queryPublic := queries.FieldValue{
+			Field: "scope",
+			Value: "Public",
+		}
+		query.Equals = append(query.Equals, queryPublic)
+	}
 	return dao.Search(query)
 }
 
