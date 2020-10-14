@@ -2,7 +2,7 @@ package app
 
 import (
 	"github.com/gorilla/mux"
-	"github.com/micro-gis/item-api/client/elasticsearch"
+	"github.com/micro-gis/geo-alert-api/client/elasticsearch"
 	"net/http"
 	"time"
 )

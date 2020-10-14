@@ -1,6 +1,6 @@
 package main
 
-import "github.com/micro-gis/item-api/app"
+import "github.com/micro-gis/geo-alert-api/app"
 
 func main() {
 	app.StartApplication()
