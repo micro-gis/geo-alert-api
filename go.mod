@@ -10,4 +10,5 @@ require (
 	github.com/micro-gis/oauth-go v1.0.4
 	github.com/micro-gis/utils v1.0.3
 	github.com/olivere/elastic v6.2.35+incompatible
+	github.com/twpayne/go-geom v1.3.6 // indirect
 )

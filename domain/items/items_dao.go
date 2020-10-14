@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/micro-gis/item-api/client/elasticsearch"
+	"github.com/micro-gis/item-api/domain/queries"
 	"github.com/micro-gis/utils/rest_errors"
 	"strings"
 )
@@ -41,4 +42,27 @@ func (i *Item) Get() rest_errors.RestErr {
 	}
 	i.Id = itemId
 	return nil
+}
+
+func (i *Item) Search(query queries.EsQuery) ([]Item, rest_errors.RestErr) {
+	result, err := elasticsearch.Client.Search(indexItem, query.Build())
+	if err != nil {
+		return nil, rest_errors.NewInternalServerError("error when trying to search documents", errors.New("database error"))
+	}
+
+	items := make([]Item, result.TotalHits())
+	for i, hit := range result.Hits.Hits {
+		bytes, _ := hit.Source.MarshalJSON()
+		item := Item{}
+		if err := json.Unmarshal(bytes, &item); err != nil {
+			return nil, rest_errors.NewInternalServerError("error when trying to parse response", errors.New("database error"))
+		}
+		item.Id = hit.Id
+		items[i] = item
+	}
+
+	if len(items) == 0 {
+		return nil, rest_errors.NewNotFoundError("not items found matching given criteria")
+	}
+	return items, nil
 }
