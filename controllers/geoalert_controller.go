@@ -25,6 +25,7 @@ type geoalertsControllerInterface interface {
 	Get(w http.ResponseWriter, r *http.Request)
 	Search(w http.ResponseWriter, r *http.Request)
 	GetUserGeoAlerts(w http.ResponseWriter, r *http.Request)
+	Delete(w http.ResponseWriter, r *http.Request)
 }
 
 type geoalertsController struct {
@@ -128,4 +129,16 @@ func (c *geoalertsController) Search(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	http_utils.ResponseJson(w, http.StatusOK, geoalerts)
+}
+
+func (cont *geoalertsController) Delete(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	geoalertId := strings.TrimSpace(vars["id"])
+
+	_, err := services.GeoAlertService.Delete(geoalertId)
+	if err != nil {
+		http_utils.ResponseError(w, err)
+		return
+	}
+	http_utils.ResponseJson(w, http.StatusNoContent, nil)
 }

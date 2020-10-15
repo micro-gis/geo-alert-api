@@ -66,3 +66,12 @@ func (i *GeoAlert) Search(query queries.EsQuery) ([]GeoAlert, rest_errors.RestEr
 	}
 	return geoalerts, nil
 }
+
+func (i *GeoAlert) Delete() rest_errors.RestErr {
+	_, err := elasticsearch.Client.Delete(indexgeoalert, typegeoalert, i.Id)
+	if err != nil {
+		return rest_errors.NewNotFoundError("geoalert with given id was not found")
+	}
+	i = nil
+	return nil
+}
