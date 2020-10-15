@@ -1,13 +1,14 @@
 package app
 
 import (
-	"github.com/micro-gis/item-api/controllers"
+	"github.com/micro-gis/geo-alert-api/controllers"
 	"net/http"
 )
 
 func mapUrls() {
-	router.HandleFunc("/items", controllers.ItemController.Create).Methods(http.MethodPost)
+	router.HandleFunc("/geoalerts", controllers.GeoAlertController.Create).Methods(http.MethodPost)
 	router.HandleFunc("/ping", controllers.PingController.Ping).Methods(http.MethodGet)
-	router.HandleFunc("/items/{id}", controllers.ItemController.Get).Methods(http.MethodGet)
-	router.HandleFunc("/items/search", controllers.ItemController.Search).Methods(http.MethodPost)
+	router.HandleFunc("/geoalerts/{id}", controllers.GeoAlertController.Get).Methods(http.MethodGet)
+	router.HandleFunc("/geoalerts/search", controllers.GeoAlertController.Search).Methods(http.MethodPost)
+	router.HandleFunc("/geoalerts/user/{user_id}", controllers.GeoAlertController.GetUserGeoAlerts).Methods(http.MethodGet)
 }
