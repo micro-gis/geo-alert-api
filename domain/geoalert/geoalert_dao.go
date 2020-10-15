@@ -75,3 +75,12 @@ func (i *GeoAlert) Delete() rest_errors.RestErr {
 	i = nil
 	return nil
 }
+
+func (i *GeoAlert) Upsert(id string) rest_errors.RestErr {
+	result, err := elasticsearch.Client.Upsert(indexgeoalert, typegeoalert, i, id)
+	if err != nil {
+		return rest_errors.NewInternalServerError("error when trying to save / update geoalert", errors.New("database error"))
+	}
+	i.Id = result.Id
+	return nil
+}

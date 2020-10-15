@@ -16,6 +16,7 @@ type geoalertServiceInterface interface {
 	Search(queries.EsQuery, bool) ([]geoalert.GeoAlert, rest_errors.RestErr)
 	GetUserGeoAlerts(int64, bool) ([]geoalert.GeoAlert, rest_errors.RestErr)
 	Delete(id string) (*geoalert.GeoAlert, rest_errors.RestErr)
+	Upsert(geoalert.GeoAlert, string) (*geoalert.GeoAlert, rest_errors.RestErr)
 }
 
 type geoalertService struct{}
@@ -70,3 +71,9 @@ func (s *geoalertService) Delete(id string) (*geoalert.GeoAlert, rest_errors.Res
 	return &geoa, nil
 }
 
+func (s *geoalertService) Upsert(geoa geoalert.GeoAlert, geoaId string) (*geoalert.GeoAlert, rest_errors.RestErr) {
+	if err := geoa.Upsert(geoaId); err != nil {
+		return nil, err
+	}
+	return &geoa, nil
+}

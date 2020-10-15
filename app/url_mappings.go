@@ -12,5 +12,5 @@ func mapUrls() {
 	router.HandleFunc("/geoalerts/search", controllers.GeoAlertController.Search).Methods(http.MethodPost)
 	router.HandleFunc("/geoalerts/user/{user_id}", controllers.GeoAlertController.GetUserGeoAlerts).Methods(http.MethodGet)
 	router.HandleFunc("/geoalerts/{id}", controllers.GeoAlertController.Delete).Methods(http.MethodDelete)
-
+	router.HandleFunc("/geoalerts/{id}", controllers.GeoAlertController.Upsert).Methods(http.MethodPut)
 }
