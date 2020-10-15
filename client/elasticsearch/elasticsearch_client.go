@@ -16,7 +16,9 @@ type esClientInterface interface {
 	setClient(c *elastic.Client)
 	Index(string, string, interface{}) (*elastic.IndexResponse, error)
 	Get(string, string, string) (*elastic.GetResult, error)
+	Delete(string, string, string) (*elastic.DeleteResponse, error)
 	Search(string, elastic.Query) (*elastic.SearchResult, error)
+	Upsert(string, string, interface{}, string) (*elastic.UpdateResponse, error)
 }
 
 type esClient struct {
@@ -79,4 +81,36 @@ func (ec *esClient) Search(index string, query elastic.Query) (*elastic.SearchRe
 		return nil, err
 	}
 	return result, nil
+}
+
+func (c *esClient) Delete(index string, docType string, id string) (*elastic.DeleteResponse, error) {
+	ctx := context.Background()
+	result, err := c.client.Delete().
+		Index(index).
+		Type(docType).
+		Id(id).
+		Do(ctx)
+
+	if err != nil {
+		logger.Error(fmt.Sprintf("error when trying to delete document id %s in index %s", id, index), err)
+		return nil, err
+	}
+	return result, nil
+}
+
+func (c *esClient) Upsert(index string, docType string, doc interface{}, id string) (*elastic.UpdateResponse, error) {
+	ctx := context.Background()
+	update, err := c.client.Update().
+		Index(index).
+		Type(docType).
+		Id(id).
+		Doc(doc).
+		DocAsUpsert(true).
+		Do(ctx)
+
+	if err != nil {
+		logger.Error(fmt.Sprintf("error when trying to update document of id  %s in index %s", id, index), err)
+		return nil, err
+	}
+	return update, nil
 }

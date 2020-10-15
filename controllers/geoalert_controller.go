@@ -25,6 +25,8 @@ type geoalertsControllerInterface interface {
 	Get(w http.ResponseWriter, r *http.Request)
 	Search(w http.ResponseWriter, r *http.Request)
 	GetUserGeoAlerts(w http.ResponseWriter, r *http.Request)
+	Delete(w http.ResponseWriter, r *http.Request)
+	Upsert(w http.ResponseWriter, r *http.Request)
 }
 
 type geoalertsController struct {
@@ -83,7 +85,7 @@ func (c *geoalertsController) Get(w http.ResponseWriter, r *http.Request) {
 	http_utils.ResponseJson(w, http.StatusOK, geoa)
 }
 func (c *geoalertsController) GetUserGeoAlerts(w http.ResponseWriter, r *http.Request) {
-	authErr := http_utils.AuthenticateRequest(r, false, 0)
+	authErr := http_utils.AuthenticateRequest(r, false)
 	if authErr != nil {
 		http_utils.ResponseError(w, authErr)
 	}
@@ -103,7 +105,7 @@ func (c *geoalertsController) GetUserGeoAlerts(w http.ResponseWriter, r *http.Re
 }
 
 func (c *geoalertsController) Search(w http.ResponseWriter, r *http.Request) {
-	authErr := http_utils.AuthenticateRequest(r, false, 0)
+	authErr := http_utils.AuthenticateRequest(r, false)
 	if authErr != nil {
 		http_utils.ResponseError(w, authErr)
 	}
@@ -128,4 +130,71 @@ func (c *geoalertsController) Search(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	http_utils.ResponseJson(w, http.StatusOK, geoalerts)
+}
+
+func (cont *geoalertsController) Delete(w http.ResponseWriter, r *http.Request) {
+	authErr := http_utils.AuthenticateRequest(r, true)
+	if authErr != nil {
+		http_utils.ResponseError(w, authErr)
+		return
+	}
+	vars := mux.Vars(r)
+	geoalertId := strings.TrimSpace(vars["id"])
+
+	geoa, err := services.GeoAlertService.Get(geoalertId)
+
+	if err != nil {
+		http_utils.ResponseError(w, err)
+		return
+	}
+
+	forceOwnerErr := http_utils.RestrictRequestToResourceOwner(r, geoa.UserId)
+	if forceOwnerErr != nil {
+		http_utils.ResponseError(w, forceOwnerErr)
+		return
+	}
+
+	_, delErr := services.GeoAlertService.Delete(geoalertId)
+	if delErr != nil {
+		http_utils.ResponseError(w, delErr)
+		return
+	}
+	http_utils.ResponseJson(w, http.StatusNoContent, nil)
+}
+
+func (cont *geoalertsController) Upsert(w http.ResponseWriter, r *http.Request) {
+	authErr := http_utils.AuthenticateRequest(r, true)
+	if authErr != nil {
+		http_utils.ResponseError(w, authErr)
+		return
+	}
+
+	vars := mux.Vars(r)
+	geoalertId := strings.TrimSpace(vars["id"])
+
+	requestBody, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		respErr := rest_errors.NewBadRequestError("invalid request body")
+		http_utils.ResponseError(w, respErr)
+		return
+	}
+	defer r.Body.Close()
+
+	var geoalertRequest geoalert.GeoAlert
+	if err := json.Unmarshal(requestBody, &geoalertRequest); err != nil {
+		respErr := rest_errors.NewBadRequestError("invalid geoalert json body")
+		http_utils.ResponseError(w, respErr)
+		return
+	}
+	forceOwnerErr := http_utils.RestrictRequestToResourceOwner(r, geoalertRequest.UserId)
+	if forceOwnerErr != nil {
+		http_utils.ResponseError(w, forceOwnerErr)
+		return
+	}
+	result, createErr := services.GeoAlertService.Upsert(geoalertRequest, geoalertId)
+	if createErr != nil {
+		http_utils.ResponseError(w, createErr)
+		return
+	}
+	http_utils.ResponseJson(w, http.StatusCreated, result)
 }

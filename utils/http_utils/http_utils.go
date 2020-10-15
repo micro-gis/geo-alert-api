@@ -17,7 +17,7 @@ func ResponseError(w http.ResponseWriter, err rest_errors.RestErr) {
 	ResponseJson(w, err.Status(), err)
 }
 
-func AuthenticateRequest(r *http.Request, forceAuth bool, forceSameUserId int64 ) rest_errors.RestErr {
+func AuthenticateRequest(r *http.Request, forceAuth bool) rest_errors.RestErr {
 	if err := oauth.AuthenticateRequest(r); err != nil {
 		return err
 	}
@@ -28,12 +28,13 @@ func AuthenticateRequest(r *http.Request, forceAuth bool, forceSameUserId int64 
 			return err
 		}
 	}
+	return nil
+}
 
-	if forceSameUserId != 0 {
-		if callerId := oauth.GetCallerId(r); callerId != forceSameUserId {
-			err := rest_errors.NewRestError("Authentication required", http.StatusUnauthorized, "unauthorized", nil)
-			return err
-		}
+func RestrictRequestToResourceOwner(r *http.Request, resourceId int64) rest_errors.RestErr {
+	if oauth.GetCallerId(r) != resourceId {
+		err := rest_errors.NewRestError("Only the owner of the resource is allowed to delete-update it", http.StatusUnauthorized, "unauthorized", nil)
+		return err
 	}
 	return nil
 }
