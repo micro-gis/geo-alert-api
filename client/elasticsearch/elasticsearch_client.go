@@ -25,7 +25,7 @@ type esClient struct {
 
 func Init() {
 	client, err := elastic.NewClient(
-		elastic.SetURL("http://127.0.01:9200"),
+		elastic.SetURL("http://127.0.01:9100"),
 		elastic.SetSniff(false),
 		elastic.SetHealthcheckInterval(10*time.Second),
 		elastic.SetErrorLog(logger.GetLogger()),
